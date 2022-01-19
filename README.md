@@ -16,7 +16,7 @@ ARGS:
 
 OPTIONS:
     -f, --fail
-            Fail for lines lines with unrecognized versions
+            Fail for lines with unrecognized versions
 
     -h, --help
             Print help information

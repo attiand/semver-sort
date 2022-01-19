@@ -25,7 +25,7 @@ struct Args {
     #[clap(short, long, takes_value = false)]
     ignore: bool,
 
-    /// Fail for lines lines with unrecognized versions
+    /// Fail for lines with unrecognized versions
     #[clap(short, long, takes_value = false)]
     fail: bool,
 
