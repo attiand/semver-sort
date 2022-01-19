@@ -25,6 +25,10 @@ struct Args {
     #[clap(short, long, takes_value = false)]
     ignore: bool,
 
+    /// Fail for lines lines with unrecognized versions
+    #[clap(short, long, takes_value = false)]
+    fail: bool,
+
     /// File to sort
     file: Option<String>,
 }
@@ -52,6 +56,10 @@ fn main() {
                 Err(m) => {
                     if! args.ignore {
                         eprintln!("Not a semantic version: '{}', {}", l, m) 
+                    }
+
+                    if args.fail {
+                        process::exit(2)
                     }
                 },
             }
