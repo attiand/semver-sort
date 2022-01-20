@@ -4,12 +4,14 @@ use std::io::{self, BufReader, BufRead};
 
 use semver::Version;
 
-use clap::Parser;
+use clap::{Parser, IntoApp};
+
+use clap_complete::{generate, shells::Bash};
 
 /// Sort lines of text files according to semantic versioning.
 /// 
 /// Write sorted lines to standard output. With no FILE, read standard input.
-#[derive(Parser, Debug)]
+#[derive(Parser)]
 #[clap(author,
     version,
     about,
@@ -31,10 +33,21 @@ struct Args {
 
     /// File to sort
     file: Option<String>,
+
+    /// Generate bash completion and exit
+    #[clap(long, takes_value = false)]
+    completion: bool,
 }
 
 fn main() {
     let args = Args::parse();
+
+    let mut app = Args::into_app();
+
+    if args.completion {
+        generate(Bash, &mut app, "semver-sort", &mut io::stdout());
+        process::exit(1)
+    }
 
     let reader: Box<dyn BufRead> = match args.file {
         None => Box::new(BufReader::new(io::stdin())),
