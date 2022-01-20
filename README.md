@@ -2,7 +2,7 @@
 Sort lines of text files according to semantic versioning
 
 ```
-semver-sort 0.2.0
+semver-sort 0.3.0
 Sort lines of text files according to semantic versioning.
 
 Write sorted lines to standard output. With no FILE, read standard input.
@@ -15,6 +15,9 @@ ARGS:
             File to sort
 
 OPTIONS:
+        --completion
+            Generate bash completion and exit
+
     -f, --fail
             Fail for lines with unrecognized versions
 
@@ -29,5 +32,4 @@ OPTIONS:
 
     -V, --version
             Print version information
-
 ```
