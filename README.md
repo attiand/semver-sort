@@ -5,14 +5,14 @@ Sort lines of text files according to semantic versioning
 semver-sort 0.4.0
 Sort lines of text files according to semantic versioning.
 
-Write sorted lines to standard output. With no FILE, or when FILE is -, read standard input.
+Write sorted lines to standard output. With no FILE, or when FILE is '-', read standard input.
 
 USAGE:
     semver-sort [OPTIONS] [FILE]
 
 ARGS:
     <FILE>
-            File to sort
+            File to sort, if '-' read standard input
 
 OPTIONS:
         --completion

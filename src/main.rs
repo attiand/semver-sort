@@ -10,7 +10,7 @@ use clap_complete::{generate, shells::Bash};
 
 /// Sort lines of text files according to semantic versioning.
 /// 
-/// Write sorted lines to standard output. With no FILE, or when FILE is -, read standard input.
+/// Write sorted lines to standard output. With no FILE, or when FILE is '-', read standard input.
 #[derive(Parser)]
 #[clap(author,
     version,
@@ -31,7 +31,7 @@ struct Args {
     #[clap(short, long, takes_value = false)]
     fail: bool,
 
-    /// File to sort
+    /// File to sort, if '-' read standard input
     file: Option<String>,
 
     /// Generate bash completion and exit
