@@ -10,7 +10,7 @@ use clap_complete::{generate, shells::Bash};
 
 /// Sort lines of text files according to semantic versioning.
 /// 
-/// Write sorted lines to standard output. With no FILE, read standard input.
+/// Write sorted lines to standard output. With no FILE, or when FILE is -, read standard input.
 #[derive(Parser)]
 #[clap(author,
     version,
@@ -51,6 +51,7 @@ fn main() {
 
     let reader: Box<dyn BufRead> = match args.file {
         None => Box::new(BufReader::new(io::stdin())),
+        Some(filename) if filename == "-" => Box::new(BufReader::new(io::stdin())),
         Some(filename) => Box::new(BufReader::new(fs::File::open(&filename).unwrap_or_else(|e| {
             eprintln!("{}, {}", filename, e);
             process::exit(1)

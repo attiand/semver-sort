@@ -2,10 +2,10 @@
 Sort lines of text files according to semantic versioning
 
 ```
-semver-sort 0.3.0
+semver-sort 0.4.0
 Sort lines of text files according to semantic versioning.
 
-Write sorted lines to standard output. With no FILE, read standard input.
+Write sorted lines to standard output. With no FILE, or when FILE is -, read standard input.
 
 USAGE:
     semver-sort [OPTIONS] [FILE]
