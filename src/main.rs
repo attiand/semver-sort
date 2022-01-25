@@ -5,7 +5,6 @@ use std::io::{self, BufReader, BufRead};
 use semver::Version;
 
 use clap::{Parser, IntoApp};
-
 use clap_complete::{generate, shells::Bash};
 
 /// Sort lines of text files according to semantic versioning.
@@ -41,21 +40,19 @@ struct Args {
 
 fn main() {
     let args = Args::parse();
-
     let mut app = Args::into_app();
 
     if args.completion {
         generate(Bash, &mut app, "semver-sort", &mut io::stdout());
-        process::exit(1)
+        process::exit(0)
     }
 
     let reader: Box<dyn BufRead> = match args.file {
-        None => Box::new(BufReader::new(io::stdin())),
-        Some(filename) if filename == "-" => Box::new(BufReader::new(io::stdin())),
         Some(filename) => Box::new(BufReader::new(fs::File::open(&filename).unwrap_or_else(|e| {
-            eprintln!("{}, {}", filename, e);
+            eprintln!("{}, {}", e, filename);
             process::exit(1)
-        })))
+        }))),
+        _ => Box::new(BufReader::new(io::stdin()))
     };
 
     let mut versions = Vec::new();
@@ -75,7 +72,7 @@ fn main() {
                     if args.fail {
                         process::exit(2)
                     }
-                },
+                }
             }
         }
     }
