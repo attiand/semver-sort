@@ -1,6 +1,5 @@
-use std::fs;
-use std::process;
 use std::io::{self, BufReader, BufRead};
+use std::fs::File;
 
 use semver::Version;
 
@@ -26,37 +25,19 @@ struct Args {
     #[clap(short, long, takes_value = false)]
     ignore: bool,
 
-    /// Fail for lines with unrecognized versions
+    /// Fail for any unrecognized versions
     #[clap(short, long, takes_value = false)]
     fail: bool,
 
-    /// File to sort, if '-' read standard input
-    file: Option<String>,
+    /// Files to sort, if '-' read standard input
+    files: Vec<String>,
 
     /// Generate bash completion and exit
     #[clap(long, takes_value = false)]
     completion: bool,
 }
 
-fn main() {
-    let args = Args::parse();
-    let mut app = Args::into_app();
-
-    if args.completion {
-        generate(Bash, &mut app, "semver-sort", &mut io::stdout());
-        process::exit(0)
-    }
-
-    let reader: Box<dyn BufRead> = match args.file {
-        Some(filename) => Box::new(BufReader::new(fs::File::open(&filename).unwrap_or_else(|e| {
-            eprintln!("{}, {}", e, filename);
-            process::exit(1)
-        }))),
-        _ => Box::new(BufReader::new(io::stdin()))
-    };
-
-    let mut versions = Vec::new();
-
+fn parse_versions(reader: Box<dyn BufRead>, versions: &mut Vec<Version>, args: &Args) -> Result<(), String> {
     for line in reader.lines() {
         if let Ok(l) = line {
             let version = Version::parse(&l);
@@ -65,16 +46,44 @@ fn main() {
                     versions.push(v);
                 },
                 Err(m) => {
-                    if! args.ignore {
-                        eprintln!("Not a semantic version: '{}', {}", l, m) 
-                    }
+                    let msg = format!("Not a semantic version: '{}', {}", l, m);
 
                     if args.fail {
-                        process::exit(2)
+                        return Err(msg)
+                    }
+
+                    if! args.ignore {
+                        eprintln!("{}", msg) 
                     }
                 }
             }
         }
+    }
+
+    Ok(())
+}
+
+fn main() -> Result<(), String> {
+    let args = Args::parse();
+    let mut app = Args::into_app();
+
+    if args.completion {
+        generate(Bash, &mut app, "semver-sort", &mut io::stdout());
+        return Ok(())
+    }
+
+    let mut versions: Vec<Version> = Vec::new();
+
+    for name in args.files.iter() {
+        let reader: Box<dyn BufRead> = match name.as_ref() {
+            "-" => Box::new(BufReader::new(io::stdin())),
+             _  => match File::open(name) {
+                Ok(file) => Box::new(BufReader::new(file)),
+                Err(e) => return Err(e.to_string()),
+            }
+        };
+
+        parse_versions(reader, &mut versions, &args)?;
     }
 
     versions.sort();
@@ -86,4 +95,6 @@ fn main() {
     for version in versions.iter() {
         println!("{}", version.to_string());
     }
+
+    Ok(())
 }
