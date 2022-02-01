@@ -2,24 +2,24 @@
 Sort lines of text files according to semantic versioning
 
 ```
-semver-sort 0.4.0
+semver-sort 0.7.0
 Sort lines of text files according to semantic versioning.
 
 Write sorted lines to standard output. With no FILE, or when FILE is '-', read standard input.
 
 USAGE:
-    semver-sort [OPTIONS] [FILE]
+    semver-sort [OPTIONS] [FILES]...
 
 ARGS:
-    <FILE>
-            File to sort, if '-' read standard input
+    <FILES>...
+            Files to sort, if '-' read standard input
 
 OPTIONS:
         --completion
             Generate bash completion and exit
 
     -f, --fail
-            Fail for lines with unrecognized versions
+            Fail for any unrecognized versions
 
     -h, --help
             Print help information

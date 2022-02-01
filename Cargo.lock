@@ -172,7 +172,7 @@ checksum = "568a8e6258aa33c13358f81fd834adb854c6f7c9468520910a9b1e8fac068012"
 
 [[package]]
 name = "semver-sort"
-version = "0.6.0"
+version = "0.7.0"
 dependencies = [
  "clap",
  "clap_complete",

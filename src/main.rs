@@ -64,12 +64,16 @@ fn parse_versions(reader: Box<dyn BufRead>, versions: &mut Vec<Version>, args: &
 }
 
 fn main() -> Result<(), String> {
-    let args = Args::parse();
+    let mut args = Args::parse();
     let mut app = Args::into_app();
 
     if args.completion {
         generate(Bash, &mut app, "semver-sort", &mut io::stdout());
         return Ok(())
+    }
+
+    if args.files.is_empty() {
+        args.files.push("-".to_string())
     }
 
     let mut versions: Vec<Version> = Vec::new();
