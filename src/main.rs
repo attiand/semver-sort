@@ -29,38 +29,12 @@ struct Args {
     #[clap(short, long, takes_value = false)]
     fail: bool,
 
-    /// Files to sort, if '-' read standard input
-    files: Vec<String>,
-
     /// Generate bash completion and exit
     #[clap(long, takes_value = false)]
     completion: bool,
-}
 
-fn parse_versions(reader: Box<dyn BufRead>, versions: &mut Vec<Version>, args: &Args) -> Result<(), String> {
-    for line in reader.lines() {
-        if let Ok(l) = line {
-            let version = Version::parse(&l);
-            match version {
-                Ok(v) => {
-                    versions.push(v);
-                },
-                Err(m) => {
-                    let msg = format!("Not a semantic version: '{}', {}", l, m);
-
-                    if args.fail {
-                        return Err(msg)
-                    }
-
-                    if! args.ignore {
-                        eprintln!("{}", msg) 
-                    }
-                }
-            }
-        }
-    }
-
-    Ok(())
+    /// Files to sort, if '-' read standard input
+    files: Vec<String>,
 }
 
 fn main() -> Result<(), String> {
@@ -87,7 +61,27 @@ fn main() -> Result<(), String> {
             }
         };
 
-        parse_versions(reader, &mut versions, &args)?;
+        for (index, line) in reader.lines().enumerate() {
+            if let Ok(l) = line {
+                let version = Version::parse(&l);
+                match version {
+                    Ok(v) => {
+                        versions.push(v);
+                    },
+                    Err(m) => {
+                        let msg = format!("{}:{}: {}", if name == "-" {"<stdin>"} else {name}, index + 1, m);
+    
+                        if args.fail {
+                            return Err(msg)
+                        }
+    
+                        if! args.ignore {
+                            eprintln!("{}", msg) 
+                        }
+                    }
+                }
+            }
+        }
     }
 
     versions.sort();
