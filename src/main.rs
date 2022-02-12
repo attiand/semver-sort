@@ -21,6 +21,10 @@ struct Args {
     #[clap(short, long, takes_value = false)]
     reverse: bool,
 
+    /// Removes repeated versions
+    #[clap(short, long, takes_value = false)]
+    uniq: bool,
+
     /// Silently ignore lines with unrecognized versions
     #[clap(short, long, takes_value = false)]
     ignore: bool,
@@ -86,12 +90,16 @@ fn main() -> Result<(), String> {
 
     versions.sort();
 
+    if args.uniq {
+        versions.dedup();
+    }
+
     if args.reverse {
         versions.reverse();
     }
 
     for version in versions.iter() {
-        println!("{}", version.to_string());
+        println!("{}", version);
     }
 
     Ok(())

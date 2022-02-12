@@ -2,7 +2,7 @@
 Sort lines of text files according to semantic versioning
 
 ```
-semver-sort 0.8.0
+semver-sort 0.9.0
 Sort lines of text files according to semantic versioning.
 
 Write sorted lines to standard output. With no FILE, or when FILE is '-', read standard input.
@@ -29,6 +29,9 @@ OPTIONS:
 
     -r, --reverse
             Reverse the result of comparisons
+
+    -u, --uniq
+            Removes repeated versions
 
     -V, --version
             Print version information
