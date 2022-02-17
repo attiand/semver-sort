@@ -1,22 +1,30 @@
-use std::io::{self, BufReader, BufRead};
 use std::fs::File;
+use std::io::{self, BufRead, BufReader};
 
 use semver::Version;
 
-use clap::{Parser, IntoApp};
+use clap::{IntoApp, Parser};
 use clap_complete::{generate, shells::Bash};
 
+const STDIN_FILE_NAME: &str = "-";
+
+macro_rules! filename {
+    ($name:expr) => {
+        if $name == STDIN_FILE_NAME {
+            "<stdin>"
+        } else {
+            $name
+        }
+    };
+}
+
 /// Sort lines of text files according to semantic versioning.
-/// 
+///
 /// Write sorted lines to standard output. With no FILE, or when FILE is '-', read standard input.
 #[derive(Parser)]
-#[clap(author,
-    version,
-    about,
-)]
+#[clap(author, version, about)]
 
 struct Args {
-
     /// Reverse the result of comparisons
     #[clap(short, long, takes_value = false)]
     reverse: bool,
@@ -43,26 +51,26 @@ struct Args {
 
 fn main() -> Result<(), String> {
     let mut args = Args::parse();
-    let mut app = Args::into_app();
+    let mut command = Args::command();
 
     if args.completion {
-        generate(Bash, &mut app, "semver-sort", &mut io::stdout());
-        return Ok(())
+        generate(Bash, &mut command, "semver-sort", &mut io::stdout());
+        return Ok(());
     }
 
     if args.files.is_empty() {
-        args.files.push("-".to_string())
+        args.files.push(STDIN_FILE_NAME.to_string())
     }
 
     let mut versions: Vec<Version> = Vec::new();
 
     for name in args.files.iter() {
         let reader: Box<dyn BufRead> = match name.as_ref() {
-            "-" => Box::new(BufReader::new(io::stdin())),
-             _  => match File::open(name) {
+            STDIN_FILE_NAME => Box::new(BufReader::new(io::stdin())),
+            _ => match File::open(name) {
                 Ok(file) => Box::new(BufReader::new(file)),
                 Err(e) => return Err(e.to_string()),
-            }
+            },
         };
 
         for (index, line) in reader.lines().enumerate() {
@@ -71,16 +79,16 @@ fn main() -> Result<(), String> {
                 match version {
                     Ok(v) => {
                         versions.push(v);
-                    },
+                    }
                     Err(m) => {
-                        let msg = format!("{}:{}: {}", if name == "-" {"<stdin>"} else {name}, index + 1, m);
-    
+                        let msg = format!("{}:{}: {}", filename!(name), index + 1, m);
+
                         if args.fail {
-                            return Err(msg)
+                            return Err(msg);
                         }
-    
-                        if! args.ignore {
-                            eprintln!("{}", msg) 
+
+                        if !args.ignore {
+                            eprintln!("{}", msg)
                         }
                     }
                 }
