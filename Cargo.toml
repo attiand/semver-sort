@@ -1,6 +1,6 @@
 [package]
-name = "semver-sort"
-version = "1.0.0"
+name = "semver"
+version = "2.0.0-beta.1"
 edition = "2018"
 
 [dependencies]

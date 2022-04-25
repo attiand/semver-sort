@@ -18,24 +18,24 @@ macro_rules! filename {
     };
 }
 
-/// Sort lines of text files according to semantic versioning.
+/// Filter and optional sort lines of files according to semantic versioning.
 ///
-/// Write sorted lines to standard output. With no FILE, or when FILE is '-', read standard input.
+/// Print semantic versions to standard output. With no FILE, or when FILE is '-', read standard input.
 #[derive(Parser)]
 #[clap(author, version, about)]
 
 struct Args {
-    /// Reverse the result of comparisons
+    /// Sort lines
+    #[clap(short, long, takes_value = false)]
+    sort: bool,
+
+    /// Reverse the result of comparisons (implies --sort)
     #[clap(short, long, takes_value = false)]
     reverse: bool,
 
-    /// Removes repeated versions
+    /// Removes repeated versions (implies --sort)
     #[clap(short, long, takes_value = false)]
     uniq: bool,
-
-    /// Silently ignore lines with unrecognized versions
-    #[clap(short, long, takes_value = false)]
-    ignore: bool,
 
     /// Fail for any unrecognized versions
     #[clap(short, long, takes_value = false)]
@@ -54,7 +54,7 @@ fn main() -> Result<(), String> {
     let mut command = Args::command();
 
     if args.completion {
-        generate(Bash, &mut command, "semver-sort", &mut io::stdout());
+        generate(Bash, &mut command, "semver", &mut io::stdout());
         return Ok(());
     }
 
@@ -86,17 +86,15 @@ fn main() -> Result<(), String> {
                         if args.fail {
                             return Err(msg);
                         }
-
-                        if !args.ignore {
-                            eprintln!("{}", msg)
-                        }
                     }
                 }
             }
         }
     }
 
-    versions.sort();
+    if args.sort || args.uniq || args.reverse {
+        versions.sort();
+    }
 
     if args.uniq {
         versions.dedup();

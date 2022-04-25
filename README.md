@@ -1,14 +1,14 @@
-# semver-sort
-Sort lines of text files according to semantic versioning
+# semver
+Filter or sort lines of files according to semantic versioning.
 
 ```
-semver-sort 1.0.0
-Sort lines of text files according to semantic versioning.
+semver 2.0.0
+Filter or sort lines of files according to semantic versioning.
 
-Write sorted lines to standard output. With no FILE, or when FILE is '-', read standard input.
+Print semantic versions to standard output. With no FILE, or when FILE is '-', read standard input.
 
 USAGE:
-    semver-sort [OPTIONS] [FILES]...
+    semver [OPTIONS] [FILES]...
 
 ARGS:
     <FILES>...
@@ -24,14 +24,14 @@ OPTIONS:
     -h, --help
             Print help information
 
-    -i, --ignore
-            Silently ignore lines with unrecognized versions
-
     -r, --reverse
-            Reverse the result of comparisons
+            Reverse the result of comparisons (implies --sort)
+
+    -s, --sort
+            Sort lines
 
     -u, --uniq
-            Removes repeated versions
+            Removes repeated versions (implies --sort)
 
     -V, --version
             Print version information
