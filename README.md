@@ -1,9 +1,9 @@
 # semver
-Filter or sort lines of files according to semantic versioning.
+Print and optional sort lines that match a semantic version.
 
 ```
-semver 2.0.0
-Filter or sort lines of files according to semantic versioning.
+semver 2.0.0-beta.2
+Print and optional sort lines that match a semantic version.
 
 Print semantic versions to standard output. With no FILE, or when FILE is '-', read standard input.
 
@@ -12,7 +12,7 @@ USAGE:
 
 ARGS:
     <FILES>...
-            Files to sort, if '-' read standard input
+            Files to process, if '-' read standard input
 
 OPTIONS:
         --completion

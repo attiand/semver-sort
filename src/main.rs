@@ -18,7 +18,7 @@ macro_rules! filename {
     };
 }
 
-/// Filter and optional sort lines of files according to semantic versioning.
+/// Print and optional sort lines that match a semantic version.
 ///
 /// Print semantic versions to standard output. With no FILE, or when FILE is '-', read standard input.
 #[derive(Parser)]
@@ -45,7 +45,7 @@ struct Args {
     #[clap(long, takes_value = false)]
     completion: bool,
 
-    /// Files to sort, if '-' read standard input
+    /// Files to process, if '-' read standard input
     files: Vec<String>,
 }
 
