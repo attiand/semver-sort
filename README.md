@@ -2,10 +2,11 @@
 Print and optional sort lines that match a semantic version.
 
 ```
-semver 2.0.0-beta.2
+semver 2.0.0
 Print and optional sort lines that match a semantic version.
 
-Print semantic versions to standard output. With no FILE, or when FILE is '-', read standard input.
+Print lines that match a semantic version to standard output. With no FILE, or when FILE is '-',
+read standard input.
 
 USAGE:
     semver [OPTIONS] [FILES]...
@@ -18,14 +19,14 @@ OPTIONS:
         --completion
             Generate bash completion and exit
 
-    -f, --fail
-            Fail for any unrecognized versions
-
     -h, --help
             Print help information
 
+    -i, --invert
+            Invert match, print unrecognized lines
+
     -r, --reverse
-            Reverse the result of comparisons (implies --sort)
+            Sort lines, reversed order
 
     -s, --sort
             Sort lines
