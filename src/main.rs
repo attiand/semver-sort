@@ -1,3 +1,4 @@
+use std::fmt;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
 
@@ -8,19 +9,9 @@ use clap_complete::{generate, shells::Bash};
 
 const STDIN_FILE_NAME: &str = "-";
 
-macro_rules! filename {
-    ($name:expr) => {
-        if $name == STDIN_FILE_NAME {
-            "<stdin>"
-        } else {
-            $name
-        }
-    };
-}
-
 /// Print and optional sort lines that match a semantic version.
 ///
-/// Print semantic versions to standard output. With no FILE, or when FILE is '-', read standard input.
+/// Print lines that match a semantic version to standard output. With no FILE, or when FILE is '-', read standard input.
 #[derive(Parser)]
 #[clap(author, version, about)]
 
@@ -29,7 +20,7 @@ struct Args {
     #[clap(short, long, takes_value = false)]
     sort: bool,
 
-    /// Reverse the result of comparisons (implies --sort)
+    /// Sort lines, reversed order
     #[clap(short, long, takes_value = false)]
     reverse: bool,
 
@@ -37,9 +28,9 @@ struct Args {
     #[clap(short, long, takes_value = false)]
     uniq: bool,
 
-    /// Fail for any unrecognized versions
+    /// Invert match, print unrecognized lines
     #[clap(short, long, takes_value = false)]
-    fail: bool,
+    invert: bool,
 
     /// Generate bash completion and exit
     #[clap(long, takes_value = false)]
@@ -47,6 +38,21 @@ struct Args {
 
     /// Files to process, if '-' read standard input
     files: Vec<String>,
+}
+
+#[derive(PartialOrd, Ord, PartialEq, Eq)]
+enum VersionType {
+    SemVersion(Version),
+    Unknown(String),
+}
+
+impl fmt::Display for VersionType {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match &*self {
+            VersionType::SemVersion(v) => write!(f, "{}", v),
+            VersionType::Unknown(s) => write!(f, "{}", s),
+        }
+    }
 }
 
 fn main() -> Result<(), String> {
@@ -62,7 +68,7 @@ fn main() -> Result<(), String> {
         args.files.push(STDIN_FILE_NAME.to_string())
     }
 
-    let mut versions: Vec<Version> = Vec::new();
+    let mut versions: Vec<VersionType> = Vec::new();
 
     for name in args.files.iter() {
         let reader: Box<dyn BufRead> = match name.as_ref() {
@@ -73,23 +79,26 @@ fn main() -> Result<(), String> {
             },
         };
 
-        for (index, line) in reader.lines().enumerate() {
+        for line in reader.lines() {
             if let Ok(l) = line {
                 let version = Version::parse(&l);
                 match version {
                     Ok(v) => {
-                        versions.push(v);
+                        versions.push(VersionType::SemVersion(v));
                     }
-                    Err(m) => {
-                        let msg = format!("{}:{}: {}", filename!(name), index + 1, m);
-
-                        if args.fail {
-                            return Err(msg);
-                        }
+                    Err(_) => {
+                        versions.push(VersionType::Unknown(l));
                     }
                 }
             }
         }
+    }
+
+    if args.invert {
+        versions.retain(|v|matches!(v, VersionType::Unknown(_)));
+    }
+    else {
+        versions.retain(|v|matches!(v, VersionType::SemVersion(_)));
     }
 
     if args.sort || args.uniq || args.reverse {
