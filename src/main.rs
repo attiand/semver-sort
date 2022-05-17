@@ -64,6 +64,13 @@ impl fmt::Display for VersionType {
     }
 }
 
+fn filter(req: &Option<VersionReq>, ver: &Version) -> bool {
+    match req  {
+        Some(r) => r.matches(&ver),
+        None => true
+    }
+}
+
 fn main() -> Result<(), String> {
     let mut args = Args::parse();
     let mut command = Args::command();
@@ -83,7 +90,7 @@ fn main() -> Result<(), String> {
     let requirement = match args.filter {
         Some(f) => match VersionReq::parse(&f) {
             Ok(requirement) => Some(requirement),
-            Err(e) => return Err(e.to_string()),
+            Err(e) => return Err(format!("{}{}", "Illegal format expression: ", e.to_string())),
         },
         None => None,
     };
@@ -115,12 +122,7 @@ fn main() -> Result<(), String> {
     }
 
     if !args.invert {
-        match requirement {
-            Some(r) => {
-                versions.retain(|c| matches!(c, VersionType::SemVersion(v) if r.matches(&v)))
-            }
-            None => versions.retain(|c| matches!(c, VersionType::SemVersion(_))),
-        }
+        versions.retain(|c| matches!(c, VersionType::SemVersion(v) if filter(&requirement, v)))
     } else {
         versions.retain(|c| matches!(c, VersionType::Unknown(_)))
     }

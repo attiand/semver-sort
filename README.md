@@ -47,8 +47,12 @@ OPTIONS:
 
 Print tags that matches semantic version.
 
-> git tag | semver
+```bash
+git tag | semver
+```
 
 Print tags that has major version number 1. 
 
-> semver --filter '>= 1.0.0, <2.0.0' tags.txt
+```bash
+semver --filter '>= 1.0.0, <2.0.0' tags.txt
+```
