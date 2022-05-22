@@ -51,7 +51,7 @@ Print tags that matches semantic version.
 git tag | semver
 ```
 
-Print tags that has major version number 1. 
+Print lines that matches semantic version and has major version number 1.
 
 ```bash
 semver --filter '>= 1.0.0, <2.0.0' tags.txt

@@ -65,9 +65,9 @@ impl fmt::Display for VersionType {
 }
 
 fn filter(req: &Option<VersionReq>, ver: &Version) -> bool {
-    match req  {
+    match req {
         Some(r) => r.matches(&ver),
-        None => true
+        None => true,
     }
 }
 
@@ -90,7 +90,13 @@ fn main() -> Result<(), String> {
     let requirement = match args.filter {
         Some(f) => match VersionReq::parse(&f) {
             Ok(requirement) => Some(requirement),
-            Err(e) => return Err(format!("{}{}", "Illegal format expression: ", e.to_string())),
+            Err(e) => {
+                return Err(format!(
+                    "{}{}",
+                    "Illegal format expression: ",
+                    e.to_string()
+                ))
+            }
         },
         None => None,
     };
