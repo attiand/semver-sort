@@ -4,7 +4,6 @@ Print, filter, sort lines that match a semantic version (https://semver.org)
 Internally uses https://crates.io/crates/semver for sorting and matching. Filter expressions syntax is described [here](https://docs.rs/semver/1.0.9/semver/struct.VersionReq.html#syntax)
 
 ```
-semver 2.1.0
 Print, filter, sort lines that match a semantic version (https://semver.org).
 
 Print lines that match a semantic version to standard output. With no FILE, or when FILE is '-',

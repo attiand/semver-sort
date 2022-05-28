@@ -1,6 +1,4 @@
-use std::fmt;
-use std::fs::File;
-use std::io::{self, BufRead, BufReader};
+use std::io::{self};
 
 use semver::{Version, VersionReq};
 
@@ -8,11 +6,9 @@ use clap::{IntoApp, Parser};
 use clap_complete::{generate, shells::Bash};
 use clap_mangen;
 
-const STDIN_FILE_NAME: &str = "-";
-
 /// Print, filter, sort lines that match a semantic version (https://semver.org).
 ///
-/// Print lines that match a semantic version to standard output. With no FILE, or when FILE is '-', read standard input.
+/// Print lines that match a semantic version to standard output. With no FILE, or when FILE is '-', read lines from standard input.
 #[derive(Parser)]
 #[clap(author, version, about)]
 
@@ -49,21 +45,6 @@ struct Args {
     files: Vec<String>,
 }
 
-#[derive(PartialOrd, Ord, PartialEq, Eq)]
-enum VersionType {
-    SemVersion(Version),
-    Unknown(String),
-}
-
-impl fmt::Display for VersionType {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match &*self {
-            VersionType::SemVersion(v) => write!(f, "{}", v),
-            VersionType::Unknown(s) => write!(f, "{}", s),
-        }
-    }
-}
-
 fn filter(req: &Option<VersionReq>, ver: &Version) -> bool {
     match req {
         Some(r) => r.matches(&ver),
@@ -72,7 +53,7 @@ fn filter(req: &Option<VersionReq>, ver: &Version) -> bool {
 }
 
 fn main() -> Result<(), String> {
-    let mut args = Args::parse();
+    let args = Args::parse();
     let mut command = Args::command();
 
     if args.completion {
@@ -89,48 +70,27 @@ fn main() -> Result<(), String> {
 
     let requirement = match args.filter {
         Some(f) => match VersionReq::parse(&f) {
-            Ok(requirement) => Some(requirement),
-            Err(e) => {
-                return Err(format!(
-                    "{}{}",
-                    "Illegal format expression: ",
-                    e.to_string()
-                ))
-            }
+            Ok(r) => Some(r),
+            Err(e) => return Err(format!("Illegal format expression: {}", e.to_string())),
         },
         None => None,
     };
 
-    if args.files.is_empty() {
-        args.files.push(STDIN_FILE_NAME.to_string())
-    }
+    let result = match args.files {
+        f if f.is_empty() => version::from_stdin(),
+        f if f.len() == 1 && args.files.first().unwrap().eq("-") => version::from_stdin(),
+        f => version::from_files(f.iter().map(String::as_ref).collect()),
+    };
 
-    let mut versions: Vec<VersionType> = Vec::new();
-
-    for name in args.files.iter() {
-        let reader: Box<dyn BufRead> = match name.as_ref() {
-            STDIN_FILE_NAME => Box::new(BufReader::new(io::stdin())),
-            _ => match File::open(name) {
-                Ok(file) => Box::new(BufReader::new(file)),
-                Err(e) => return Err(e.to_string()),
-            },
-        };
-
-        for line in reader.lines() {
-            if let Ok(l) = line {
-                let version = Version::parse(&l);
-                match version {
-                    Ok(v) => versions.push(VersionType::SemVersion(v)),
-                    Err(_) => versions.push(VersionType::Unknown(l)),
-                }
-            }
-        }
-    }
+    let mut versions = match result {
+        Ok(v) => v,
+        Err(e) => return Err(e),
+    };
 
     if !args.invert {
-        versions.retain(|c| matches!(c, VersionType::SemVersion(v) if filter(&requirement, v)))
+        versions.retain(|c| matches!(c, version::Type::SemVersion(v) if filter(&requirement, v)))
     } else {
-        versions.retain(|c| matches!(c, VersionType::Unknown(_)))
+        versions.retain(|c| matches!(c, version::Type::Unknown(_)))
     }
 
     if args.sort || args.uniq || args.reverse {

@@ -1,10 +1,17 @@
 [package]
-name = "semver"
+name = "version"
 version = "2.1.1"
 edition = "2021"
+
+[[bin]]
+name = "semver"
+path = "src/main.rs"
 
 [dependencies]
 semver = "1.0.9"
 clap_mangen = "0.1.6"
 clap = { version = "3.1.18", features = ["derive"] }
 clap_complete = { version = "3.1.4" }
+
+[dev-dependencies]
+tempfile = "3"
