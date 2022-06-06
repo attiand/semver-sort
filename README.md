@@ -44,14 +44,26 @@ OPTIONS:
 
 ## Examples
 
-Print tags that matches semantic version.
+Print git tags that matches a semantic version.
 
 ```bash
 git tag | semver
 ```
 
-Print lines that matches semantic version and has major version number 1.
+Print the highest sematic version in current git repo.
 
 ```bash
-semver --filter '>= 1.0.0, <2.0.0' tags.txt
+git tag | semver --sort | tail -n1
+```
+
+Print lines that matches a semantic version and has major version number 1 from specified file.
+
+```bash
+semver --filter '>= 1, <2' tags.txt
+```
+
+Print all versions between `1.2.0` and `1.3.7` (inclusive) from specified files.
+
+```bash
+semver --filter '>= 1.2.0, <=1.3.7' tags1.txt tags2.txt 
 ```

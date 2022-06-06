@@ -71,7 +71,7 @@ fn main() -> Result<(), String> {
     let requirement = match args.filter {
         Some(f) => match VersionReq::parse(&f) {
             Ok(r) => Some(r),
-            Err(e) => return Err(format!("Illegal format expression: {}", e.to_string())),
+            Err(e) => return Err(format!("Illegal filter format expression: {}", e.to_string())),
         },
         None => None,
     };
