@@ -21,7 +21,7 @@ OPTIONS:
             Generate bash completion and exit
 
     -f, --filter <EXPR>
-            Filter versions acording to expression. Has no meaning with --invert
+            Filter versions according to expression. Has no meaning with --invert
 
     -h, --help
             Print help information
@@ -65,5 +65,5 @@ semver --filter '>= 1, <2' tags.txt
 Print all versions between `1.2.0` and `1.3.7` (inclusive) from specified files.
 
 ```bash
-semver --filter '>= 1.2.0, <=1.3.7' tags1.txt tags2.txt 
+semver --filter '>= 1.2.0, <=1.3.7' tags1.txt tags2.txt
 ```

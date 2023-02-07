@@ -4,7 +4,6 @@ use semver::{Version, VersionReq};
 
 use clap::{IntoApp, Parser};
 use clap_complete::{generate, shells::Bash};
-use clap_mangen;
 
 /// Print, filter, sort lines that match a semantic version (https://semver.org).
 ///
@@ -25,7 +24,7 @@ struct Args {
     #[clap(short, long, takes_value(false))]
     uniq: bool,
 
-    /// Filter versions acording to expression. Has no meaning with --invert
+    /// Filter versions according to expression. Has no meaning with --invert
     #[clap(short, long, value_name("EXPR"))]
     filter: Option<String>,
 
@@ -47,7 +46,7 @@ struct Args {
 
 fn filter(req: &Option<VersionReq>, ver: &Version) -> bool {
     match req {
-        Some(r) => r.matches(&ver),
+        Some(r) => r.matches(ver),
         None => true,
     }
 }
@@ -71,7 +70,7 @@ fn main() -> Result<(), String> {
     let requirement = match args.filter {
         Some(f) => match VersionReq::parse(&f) {
             Ok(r) => Some(r),
-            Err(e) => return Err(format!("Illegal filter format expression: {}", e.to_string())),
+            Err(e) => return Err(format!("Illegal filter format expression: {e}")),
         },
         None => None,
     };
@@ -106,7 +105,7 @@ fn main() -> Result<(), String> {
     }
 
     for version in versions.iter() {
-        println!("{}", version)
+        println!("{version}")
     }
 
     Ok(())
