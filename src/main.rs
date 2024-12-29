@@ -2,43 +2,39 @@ use std::io::{self};
 
 use semver::{Version, VersionReq};
 
-use clap::{IntoApp, Parser};
-use clap_complete::{generate, shells::Bash};
+use clap::{CommandFactory, Parser};
+use clap_complete::{generate, Shell};
 
 /// Print, filter, sort lines that match a semantic version (https://semver.org).
 ///
 /// Print lines that match a semantic version to standard output. With no FILE, or when FILE is '-', read lines from standard input.
 #[derive(Parser)]
 #[clap(author, version, about)]
-
 struct Args {
+
     /// Sort lines
-    #[clap(short, long, takes_value(false))]
+    #[clap(short, long)]
     sort: bool,
 
     /// Sort lines in reversed order
-    #[clap(short, long, takes_value(false))]
+    #[clap(short, long)]
     reverse: bool,
 
     /// Removes repeated versions (implies --sort)
-    #[clap(short, long, takes_value(false))]
+    #[clap(short, long)]
     uniq: bool,
 
     /// Filter versions according to expression. Has no meaning with --invert
-    #[clap(short, long, value_name("EXPR"))]
+    #[clap(short, long, num_args(1), value_name("EXPR"))]
     filter: Option<String>,
 
     /// Invert match, i.e. print lines that not match a semantic version
-    #[clap(short, long, takes_value(false))]
+    #[clap(short, long)]
     invert: bool,
 
-    /// Generate bash completion and exit
-    #[clap(long, takes_value(false))]
-    completion: bool,
-
-    /// Generate manual page
-    #[clap(long, hide(true), takes_value(false))]
-    manual: bool,
+    /// Generate completion for the specified shell and exit
+    #[clap(long, num_args(1), value_name("SHELL"))]
+    completion: Option<Shell>,
 
     /// Files to process, if '-' read standard input
     files: Vec<String>,
@@ -53,18 +49,14 @@ fn filter(req: &Option<VersionReq>, ver: &Version) -> bool {
 
 fn main() -> Result<(), String> {
     let args = Args::parse();
-    let mut command = Args::command();
 
-    if args.completion {
-        generate(Bash, &mut command, "semver", &mut io::stdout());
-        return Ok(());
-    }
-
-    if args.manual {
-        return match clap_mangen::Man::new(command).render(&mut io::stdout()) {
-            Ok(()) => Ok(()),
-            Err(msg) => Err(msg.to_string()),
-        };
+    match args.completion {
+        Some(shell) => {
+            let mut cmd = Args::command();
+            generate(shell, &mut cmd, "semver", &mut io::stdout());
+            return Ok(());
+        },
+        None => (),
     }
 
     let requirement = match args.filter {
