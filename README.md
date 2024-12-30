@@ -17,8 +17,10 @@ ARGS:
             Files to process, if '-' read standard input
 
 OPTIONS:
-        --completion
-            Generate bash completion and exit
+    --completion <SHELL>
+          Generate completion for the specified shell and exit
+          
+          [possible values: bash, elvish, fish, powershell, zsh]
 
     -f, --filter <EXPR>
             Filter versions according to expression. Has no meaning with --invert
