@@ -22,7 +22,7 @@ impl fmt::Display for Type {
 fn from_reader<R: BufRead>(reader: &mut R) -> Result<Vec<Type>, String> {
     let mut versions: Vec<Type> = Vec::new();
 
-    for line in reader.lines().flatten() {
+    for line in reader.lines().map_while(Result::ok) {
         match Version::parse(&line) {
             Ok(v) => versions.push(Type::SemVersion(v)),
             Err(_) => versions.push(Type::Unknown(line)),

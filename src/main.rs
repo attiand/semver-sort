@@ -11,7 +11,6 @@ use clap_complete::{generate, Shell};
 #[derive(Parser)]
 #[clap(author, version, about)]
 struct Args {
-
     /// Sort lines
     #[clap(short, long)]
     sort: bool,
@@ -25,7 +24,7 @@ struct Args {
     uniq: bool,
 
     /// Filter versions according to expression. Has no meaning with --invert
-    #[clap(short, long, num_args(1), value_name("EXPR"))]
+    #[clap(short, long, num_args(1), value_name("EXPR"), value_hint = clap::ValueHint::Other)]
     filter: Option<String>,
 
     /// Invert match, i.e. print lines that not match a semantic version
@@ -37,6 +36,7 @@ struct Args {
     completion: Option<Shell>,
 
     /// Files to process, if '-' read standard input
+    #[clap(value_hint = clap::ValueHint::FilePath)]
     files: Vec<String>,
 }
 
@@ -50,13 +50,15 @@ fn filter(req: &Option<VersionReq>, ver: &Version) -> bool {
 fn main() -> Result<(), String> {
     let args = Args::parse();
 
-    match args.completion {
-        Some(shell) => {
-            let mut cmd = Args::command();
-            generate(shell, &mut cmd, "semver", &mut io::stdout());
-            return Ok(());
-        },
-        None => (),
+    if let Some(shell) = args.completion {
+        let cmd = &mut Args::command();
+        generate(
+            shell,
+            cmd,
+            Args::command().get_bin_name().unwrap_or("semver"),
+            &mut io::stdout(),
+        );
+        return Ok(());
     }
 
     let requirement = match args.filter {
