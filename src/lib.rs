@@ -1,59 +1,166 @@
 use std::fmt;
 use std::fs::File;
 use std::io::{self, BufRead, BufReader};
+use std::path::Path;
+use thiserror::Error;
 
 use semver::Version;
 
-#[derive(PartialOrd, Ord, PartialEq, Eq, Clone)]
-pub enum Type {
+/// Represents possible errors that can occur during version processing
+#[derive(Error, Debug)]
+pub enum VersionError {
+    #[error("IO error: {0}")]
+    Io(#[from] io::Error),
+    
+    #[error("Failed to open file '{path}': {source}")]
+    FileOpen {
+        path: String,
+        source: io::Error,
+    },
+}
+
+/// Represents a parsed line that may contain a semantic version
+#[derive(PartialOrd, Ord, PartialEq, Eq, Clone, Debug)]
+pub enum VersionEntry {
+    /// A valid semantic version
     SemVersion(Version),
+    /// A line that doesn't contain a valid semantic version
     Unknown(String),
 }
 
-impl fmt::Display for Type {
+impl fmt::Display for VersionEntry {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
-            Type::SemVersion(v) => write!(f, "{v}"),
-            Type::Unknown(s) => write!(f, "{s}"),
+            VersionEntry::SemVersion(v) => write!(f, "{v}"),
+            VersionEntry::Unknown(s) => write!(f, "{s}"),
         }
     }
 }
 
-fn from_reader<R: BufRead>(reader: &mut R) -> Result<Vec<Type>, String> {
-    let mut versions: Vec<Type> = Vec::new();
+/// Reads and parses versions from a BufRead source
+/// 
+/// # Arguments
+/// 
+/// * `reader` - Any type that implements BufRead
+/// 
+/// # Returns
+/// 
+/// Returns a Result containing a vector of VersionEntry items or a VersionError
+/// 
+/// # Example
+/// 
+/// ```
+/// use std::io::Cursor;
+/// # use version::from_reader;
+/// 
+/// let input = "1.0.0\ninvalid\n2.0.0\n";
+/// let mut cursor = Cursor::new(input);
+/// let versions = from_reader(&mut cursor).unwrap();
+/// assert_eq!(versions.len(), 3);
+/// ```
+fn from_reader<R: BufRead>(reader: &mut R) -> Result<Vec<VersionEntry>, VersionError> {
+    let mut versions = Vec::new();
 
-    for line in reader.lines().map_while(Result::ok) {
-        match Version::parse(&line) {
-            Ok(v) => versions.push(Type::SemVersion(v)),
-            Err(_) => versions.push(Type::Unknown(line)),
-        }
+    for line in reader.lines() {
+        let line = line?;
+        let entry = match Version::parse(&line) {
+            Ok(v) => VersionEntry::SemVersion(v),
+            Err(_) => VersionEntry::Unknown(line),
+        };
+        versions.push(entry);
     }
 
     Ok(versions)
 }
 
-pub fn from_stdin() -> Result<Vec<Type>, String> {
+/// Reads and parses versions from standard input
+/// 
+/// # Returns
+/// 
+/// Returns a Result containing a vector of VersionEntry items or a VersionError
+/// 
+/// # Example
+/// 
+/// ```no_run
+/// # use version::from_stdin;
+/// let versions = from_stdin().unwrap();
+/// for version in versions {
+///     println!("{}", version);
+/// }
+/// ```
+pub fn from_stdin() -> Result<Vec<VersionEntry>, VersionError> {
     from_reader(&mut BufReader::new(io::stdin()))
 }
 
-pub fn from_files(paths: Vec<&str>) -> Result<Vec<Type>, String> {
-    let mut files: Vec<File> = Vec::new();
+/// Reads and parses versions from multiple files
+/// 
+/// # Arguments
+/// 
+/// * `paths` - A slice of file paths to process
+/// 
+/// # Returns
+/// 
+/// Returns a Result containing a vector of VersionEntry items or a VersionError
+/// 
+/// # Example
+/// 
+/// ```no_run
+/// # use version::from_files;
+/// let paths = vec!["versions.txt", "more_versions.txt"];
+/// let versions = from_files(&paths).unwrap();
+/// for version in versions {
+///     println!("{}", version);
+/// }
+/// ```
+pub fn from_files<P: AsRef<Path>>(paths: &[P]) -> Result<Vec<VersionEntry>, VersionError> {
+    paths
+        .iter()
+        .map(|path| {
+            File::open(path).map_err(|e| VersionError::FileOpen {
+                path: path.as_ref().display().to_string(),
+                source: e,
+            })
+        })
+        .map(|file_result| {
+            file_result.map(|file| from_reader(&mut BufReader::new(file)))
+        })
+        .try_fold(Vec::new(), |mut acc, file_result| {
+            acc.extend(file_result??);
+            Ok(acc)
+        })
+}
 
-    for path in paths.iter() {
-        match File::open(path) {
-            Ok(f) => files.push(f),
-            Err(e) => return Err(format!("Can't open: '{path}', {e}")),
-        }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::io::Cursor;
+
+    #[test]
+    fn test_parse_valid_version() {
+        let input = "1.0.0\n";
+        let mut cursor = Cursor::new(input);
+        let versions = from_reader(&mut cursor).unwrap();
+        assert_eq!(versions.len(), 1);
+        assert!(matches!(versions[0], VersionEntry::SemVersion(_)));
     }
 
-    let mut versions: Vec<Type> = Vec::new();
-
-    for file in files.iter() {
-        match from_reader(&mut BufReader::new(file)) {
-            Ok(v) => versions.extend(v.iter().cloned()),
-            Err(e) => return Err(e),
-        }
+    #[test]
+    fn test_parse_invalid_version() {
+        let input = "not_a_version\n";
+        let mut cursor = Cursor::new(input);
+        let versions = from_reader(&mut cursor).unwrap();
+        assert_eq!(versions.len(), 1);
+        assert!(matches!(versions[0], VersionEntry::Unknown(_)));
     }
 
-    Ok(versions)
+    #[test]
+    fn test_parse_mixed_content() {
+        let input = "1.0.0\ninvalid\n2.0.0\n";
+        let mut cursor = Cursor::new(input);
+        let versions = from_reader(&mut cursor).unwrap();
+        assert_eq!(versions.len(), 3);
+        assert!(matches!(versions[0], VersionEntry::SemVersion(_)));
+        assert!(matches!(versions[1], VersionEntry::Unknown(_)));
+        assert!(matches!(versions[2], VersionEntry::SemVersion(_)));
+    }
 }

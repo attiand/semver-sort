@@ -8,9 +8,12 @@ name = "semver"
 path = "src/main.rs"
 
 [dependencies]
-semver = "1.0.9"
-clap = { version = "4.5.23", features = ["derive"] }
-clap_complete = { version = "4.5.40" }
+semver = "1.0.20"
+clap = { version = "4.5.1", features = ["derive"] }
+clap_complete = "4.5.1"
+thiserror = "1.0.56"
 
 [dev-dependencies]
-tempfile = "3"
+tempfile = "3.10.0"
+assert_cmd = "2.0.13"
+predicates = "3.1.0"
